@@ -1,0 +1,23 @@
+# Python
+venv/
+__pycache__/
+*.pyc
+*.pyo
+
+# Node
+node_modules/
+frontend/dist/
+
+# Database (local dev data — teammates will generate their own)
+backend/burnout.db
+
+# Environment/secrets
+.env
+*.env
+
+# OS/editor junk
+.DS_Store
+Thumbs.db
+.vscode/
+
+.ipynb_checkpoints/

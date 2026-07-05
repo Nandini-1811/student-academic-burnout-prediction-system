@@ -1,0 +1,73 @@
+:root {
+  --teal-deep: #028090;
+  --seafoam: #00A896;
+  --mint: #02C39A;
+  --dark: #07272B;
+  --dark2: #0B3B40;
+  --offwhite: #F7FAFA;
+  --ink: #0B2E30;
+  --muted: #5C7A7D;
+  --low: #02C39A;
+  --med: #F4A261;
+  --high: #E76F51;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: 'Segoe UI', system-ui, sans-serif;
+  background: var(--offwhite);
+  color: var(--ink);
+}
+
+.app-container {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 2rem 1.5rem;
+}
+
+.app-header {
+  margin-bottom: 2rem;
+}
+
+.app-header h1 {
+  font-size: 1.75rem;
+  margin: 0 0 0.25rem 0;
+  color: var(--dark);
+}
+
+.app-header p {
+  color: var(--muted);
+  margin: 0;
+}
+
+.card {
+  background: white;
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+  margin-bottom: 1.5rem;
+}
+
+button.primary-btn {
+  background: var(--teal-deep);
+  color: white;
+  border: none;
+  padding: 0.7rem 1.4rem;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+button.primary-btn:hover {
+  background: var(--seafoam);
+}
+
+button.primary-btn:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+}
