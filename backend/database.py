@@ -1,4 +1,4 @@
-from sqlalchemy import create_engine, Column, Integer, String, Float, DateTime
+from sqlalchemy import create_engine, Column, Integer, String, Float, DateTime, Text
 from sqlalchemy.orm import declarative_base, sessionmaker
 from datetime import datetime
 
@@ -16,7 +16,6 @@ class Prediction(Base):
     student_id = Column(String, index=True)
     timestamp = Column(DateTime, default=datetime.utcnow)
 
-    # Store the 14 input features
     mbi_exhaustion = Column(Float)
     mbi_cynicism = Column(Float)
     mbi_efficacy = Column(Float)
@@ -32,11 +31,11 @@ class Prediction(Base):
     time_on_task_weekly = Column(Float)
     engagement_variability = Column(Float)
 
-    # Store the prediction result
     risk_level = Column(String)
     prob_low = Column(Float)
     prob_medium = Column(Float)
     prob_high = Column(Float)
+    top_factors_json = Column(Text)
 
 
 def init_db():

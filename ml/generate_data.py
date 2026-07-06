@@ -29,15 +29,22 @@ engagement_variability = np.clip(np.random.normal(2 + 5 * burnout_tendency, 1.5,
 
 # ---- Burnout risk label from the same latent tendency + noise ----
 risk_score = (
-    0.35 * burnout_tendency
-    + 0.15 * (mbi_exhaustion / 54)
-    + 0.15 * (dass_stress / 42)
-    + 0.15 * (1 - attendance_rate / 100)
-    + 0.10 * (late_submission_count / 20)
-    + 0.10 * np.random.normal(0, 0.05, N)  # small noise
+    0.20 * (mbi_exhaustion / 54)
+    + 0.15 * (mbi_cynicism / 45)
+    + 0.10 * (1 - mbi_efficacy / 48)
+    + 0.10 * (dass_depression / 42)
+    + 0.10 * (dass_anxiety / 42)
+    + 0.10 * (dass_stress / 42)
+    + 0.05 * (1 - cope_score / 60) 
+    + 0.10 * (1 - attendance_rate / 100)
+    + 0.05 * (late_submission_count / 20)
+    + 0.05 * np.random.normal(0, 0.15, N)
 )
 
-risk_level = pd.cut(risk_score, bins=[-np.inf, 0.35, 0.55, np.inf], labels=["Low", "Medium", "High"])
+print(pd.Series(risk_score).describe())
+print("Percentiles:", np.percentile(risk_score, [50, 70, 85, 90, 95]))
+
+risk_level = pd.qcut(risk_score, q=[0, 0.50, 0.85, 1.0], labels=["Low", "Medium", "High"])
 
 df = pd.DataFrame({
     "student_id": [f"S{1000+i}" for i in range(N)],

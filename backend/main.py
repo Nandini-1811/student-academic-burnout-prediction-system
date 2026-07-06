@@ -4,6 +4,7 @@ from pydantic import BaseModel
 from contextlib import asynccontextmanager
 import joblib
 import pandas as pd
+import json
 
 from database import init_db, get_db, Prediction
 from fastapi.middleware.cors import CORSMiddleware
@@ -59,7 +60,7 @@ def root():
 
 
 @app.post("/predict")
-def predict(student: StudentFeatures, top_n: int = 5, db: Session = Depends(get_db)):
+def predict(student: StudentFeatures, top_n: int = 7, db: Session = Depends(get_db)):
     model = ml_models["model"]
     scaler = ml_models["scaler"]
     label_encoder = ml_models["label_encoder"]
@@ -86,6 +87,8 @@ def predict(student: StudentFeatures, top_n: int = 5, db: Session = Depends(get_
         "shap_value": contributions
     }).sort_values("shap_value", key=abs, ascending=False).head(top_n)
 
+    top_factors = explanation_df.to_dict(orient="records")
+
     # ---- Save this prediction to the database ----
     record = Prediction(
         student_id=student_id,
@@ -93,6 +96,7 @@ def predict(student: StudentFeatures, top_n: int = 5, db: Session = Depends(get_
         prob_low=proba_dict.get("Low", 0),
         prob_medium=proba_dict.get("Medium", 0),
         prob_high=proba_dict.get("High", 0),
+        top_factors_json=json.dumps(top_factors),
         **student_data
     )
     db.add(record)
@@ -102,7 +106,7 @@ def predict(student: StudentFeatures, top_n: int = 5, db: Session = Depends(get_
         "student_id": student_id,
         "risk_level": str(risk_level),
         "probabilities": proba_dict,
-        "top_factors": explanation_df.to_dict(orient="records")
+        "top_factors": top_factors
     }
 
 
@@ -116,6 +120,48 @@ def get_trends(student_id: str, db: Session = Depends(get_db)):
     )
     return [
         {
+            "timestamp": r.timestamp,
+            "risk_level": r.risk_level,
+            "prob_high": r.prob_high,
+        }
+        for r in records
+    ]
+
+
+@app.get("/student/{student_id}/latest")
+def get_latest_checkin(student_id: str, db: Session = Depends(get_db)):
+    record = (
+        db.query(Prediction)
+        .filter(Prediction.student_id == student_id)
+        .order_by(Prediction.timestamp.desc())
+        .first()
+    )
+    if not record:
+        return None
+    return {
+        "student_id": record.student_id,
+        "timestamp": record.timestamp,
+        "risk_level": record.risk_level,
+        "probabilities": {
+            "Low": record.prob_low,
+            "Medium": record.prob_medium,
+            "High": record.prob_high,
+        },
+        "top_factors": json.loads(record.top_factors_json) if record.top_factors_json else [],
+    }
+
+
+@app.get("/student/{student_id}/history")
+def get_checkin_history(student_id: str, db: Session = Depends(get_db)):
+    records = (
+        db.query(Prediction)
+        .filter(Prediction.student_id == student_id)
+        .order_by(Prediction.timestamp.desc())
+        .all()
+    )
+    return [
+        {
+            "id": r.id,
             "timestamp": r.timestamp,
             "risk_level": r.risk_level,
             "prob_high": r.prob_high,
