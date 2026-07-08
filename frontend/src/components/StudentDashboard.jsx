@@ -10,10 +10,10 @@ const RISK_COLORS = {
 
 // Hardcoded for now — replaced once real student-mentor association exists
 const MOCK_MENTOR = {
-  name: "Akash Rajak",
+  name: "John Doe",
   department: "Computer Science",
-  room: "Room 214, CS Block",
-  mobile: "+91-9876543210",
+  room: "Room 001, CS Block",
+  mobile: "+91-9xxxxxxxx",
 };
 
 function StudentDashboard() {
