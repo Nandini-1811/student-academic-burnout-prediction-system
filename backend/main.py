@@ -87,6 +87,7 @@ def predict(student: StudentFeatures, top_n: int = 7, db: Session = Depends(get_
         "shap_value": contributions
     }).sort_values("shap_value", key=abs, ascending=False).head(top_n)
 
+    explanation_df = explanation_df.assign(value=explanation_df["feature"].map(student_data))
     top_factors = explanation_df.to_dict(orient="records")
 
     # ---- Save this prediction to the database ----

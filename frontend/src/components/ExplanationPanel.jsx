@@ -86,6 +86,19 @@ const SUMMARY_BY_RISK = {
   High: "Your check-in suggests you may be under real strain right now. The factors below are worth taking seriously, and reaching out to a mentor or counselor could help.",
 };
 
+const UNITS = {
+  attendance_rate: "%",
+  assignment_completion_rate: "%",
+  late_submission_count: " late submissions",
+  lms_login_frequency: " logins/week",
+  time_on_task_weekly: " hrs/week",
+};
+
+const formatValue = (feature, v) => {
+  const num = Number.isInteger(v) ? v : v.toFixed(1);
+  return ` (${num}${UNITS[feature] || ""})`;
+};
+
 function ExplanationPanel({ topFactors, riskLevel }) {
   if (!topFactors || topFactors.length === 0) return null;
 
@@ -122,7 +135,14 @@ function ExplanationPanel({ topFactors, riskLevel }) {
       {topFactors.map((factor) => {
         const isPositive = factor.shap_value > 0;
         const widthPct = (Math.abs(factor.shap_value) / maxAbs) * 100;
-        const desc = FEATURE_DESCRIPTIONS[factor.feature]?.[isPositive ? "increases" : "decreases"];
+        const hasValue = typeof factor.value === "number";
+        const desc = hasValue
+          ? `Your value${formatValue(factor.feature, factor.value)} ${
+              isPositive
+                ? "pushed the risk estimate up relative to the average student."
+                : "pulled the risk estimate down relative to the average student."
+            }`
+          : FEATURE_DESCRIPTIONS[factor.feature]?.[isPositive ? "increases" : "decreases"];
         return (
           <div key={factor.feature} style={{ marginBottom: "1.1rem" }}>
             <div
