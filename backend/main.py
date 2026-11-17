@@ -5,6 +5,8 @@ from contextlib import asynccontextmanager
 import joblib
 import pandas as pd
 import json
+import os
+import numpy as np
 
 from database import init_db, get_db, Prediction
 from fastapi.middleware.cors import CORSMiddleware
@@ -18,6 +20,11 @@ async def lifespan(app: FastAPI):
     ml_models["scaler"] = joblib.load("models/hybrid_scaler.pkl")
     ml_models["label_encoder"] = joblib.load("models/label_encoder.pkl")
     ml_models["feature_list"] = joblib.load("models/hybrid_feature_list.pkl")
+    for key, fname in [("cmp_logistic", "compare_logistic.pkl"),
+                    ("cmp_tree", "compare_tree.pkl"),
+                    ("cmp_linear", "compare_linear.pkl")]:
+                if os.path.exists(f"models/{fname}"):
+                    ml_models[key] = joblib.load(f"models/{fname}")
     import shap
     ml_models["explainer"] = shap.TreeExplainer(ml_models["model"])
     init_db()
@@ -53,6 +60,24 @@ class StudentFeatures(BaseModel):
     time_on_task_weekly: float
     engagement_variability: float
 
+class CompareInput(BaseModel):
+    mbi_exhaustion: float
+    mbi_cynicism: float
+    mbi_efficacy: float
+    dass_depression: float
+    dass_anxiety: float
+    dass_stress: float
+    cope_score: float
+    attendance_rate: float
+    grade_decline_slope: float
+    assignment_completion_rate: float
+    late_submission_count: float
+    lms_login_frequency: float
+    time_on_task_weekly: float
+    engagement_variability: float
+
+
+CLASS_ORDER = ["Low", "Medium", "High"]
 
 @app.get("/")
 def root():
@@ -188,3 +213,56 @@ def get_all_students(db: Session = Depends(get_db)):
             })
     latest.sort(key=lambda x: {"High": 0, "Medium": 1, "Low": 2}[x["risk_level"]])
     return latest
+
+
+@app.post("/compare")
+def compare_models(inp: CompareInput):
+    """Run every model on the same input. Nothing is saved to the database."""
+    feature_list = ml_models["feature_list"]
+    le = ml_models["label_encoder"]
+    X = ml_models["scaler"].transform(pd.DataFrame([inp.model_dump()])[feature_list])
+    results = []
+
+    def add(key, name, note, probs_by_class, label=None, deployed=False, score=None):
+        probs = {c: round(float(probs_by_class.get(c, 0.0)), 3) for c in CLASS_ORDER}
+        results.append({
+            "key": key, "name": name, "note": note, "deployed": deployed,
+            "risk_level": label or max(probs, key=probs.get),
+            "probabilities": probs,
+            "score": None if score is None else round(float(score), 2),
+        })
+
+    if "cmp_linear" in ml_models:
+        score = float(ml_models["cmp_linear"].predict(X)[0])
+        d = -((score - np.arange(3)) ** 2) * 4
+        e = np.exp(d - d.max())
+        add("linear", "Linear regression",
+            "Predicts a score from 0 to 2 and rounds it. Percentages are approximate.",
+            dict(zip(CLASS_ORDER, e / e.sum())),
+            label=CLASS_ORDER[int(np.clip(np.rint(score), 0, 2))], score=score)
+
+    for key, mkey, name, note in [
+        ("logistic", "cmp_logistic", "Logistic regression", "Straight-line decision boundaries. Simple and stable."),
+        ("tree", "cmp_tree", "Decision tree", "One set of if/else rules. Easy to read, less stable."),
+    ]:
+        if mkey in ml_models:
+            p = ml_models[mkey].predict_proba(X)[0]
+            add(key, name, note, dict(zip(le.classes_, p)))
+
+    p = ml_models["model"].predict_proba(X)[0]
+    add("xgboost", "XGBoost", "Many small trees combined. Supports the SHAP explanations.",
+        dict(zip(le.classes_, p)), deployed=True)
+
+    labels = [r["risk_level"] for r in results]
+    top = max(set(labels), key=labels.count)
+    return {"models": results,
+            "agreement": {"majority": top, "count": labels.count(top), "total": len(labels)}}
+
+
+@app.get("/student/{student_id}/features")
+def get_latest_features(student_id: str, db: Session = Depends(get_db)):
+    r = (db.query(Prediction).filter(Prediction.student_id == student_id)
+         .order_by(Prediction.timestamp.desc()).first())
+    if not r:
+        return None
+    return {f: getattr(r, f) for f in ml_models["feature_list"]}

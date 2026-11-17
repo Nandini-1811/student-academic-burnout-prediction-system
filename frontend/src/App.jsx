@@ -4,6 +4,7 @@ import StudentDashboard from "./components/StudentDashboard";
 import MentorDashboard from "./components/MentorDashboard";
 import StudentHistory from "./components/StudentHistory";
 import ChatSurvey from "./components/ChatSurvey";
+import ModelComparison from "./components/ModelComparison";
 
 function NavBar() {
   return (
@@ -21,6 +22,9 @@ function NavBar() {
       <Link to="/mentor" style={{ color: "var(--mint)", textDecoration: "none", fontWeight: 600 }}>
         Mentor Dashboard
       </Link>
+      <Link to="/models" style={{ color: "var(--mint)", textDecoration: "none", fontWeight: 600 }}>
+        Model Comparison
+      </Link>
     </div>
   );
 }
@@ -35,6 +39,7 @@ function App() {
         <Route path="/history/:studentId" element={<StudentHistory />} />
         <Route path="/checkin/:studentId" element={<ChatSurvey />} />
         <Route path="/mentor" element={<MentorDashboard />} />
+        <Route path="/models" element={<ModelComparison />} />
       </Routes>
     </BrowserRouter>
   );

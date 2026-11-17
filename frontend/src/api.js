@@ -13,4 +13,10 @@ export const getTrends = (studentId) =>
 export const getAllStudents = () =>
   api.get("/mentor/students").then((res) => res.data);
 
+export const compareModels = (features) =>
+  api.post("/compare", features).then((res) => res.data);
+
+export const getStudentFeatures = (studentId) =>
+  api.get(`/student/${studentId}/features`).then((res) => res.data);
+
 export default api;

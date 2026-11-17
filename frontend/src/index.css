@@ -71,3 +71,41 @@ button.primary-btn:disabled {
   background: #ccc;
   cursor: not-allowed;
 }
+
+
+.mentor-layout {
+  display: flex;
+  gap: 1.5rem;
+  align-items: flex-start;
+  max-width: 1340px;
+  margin: 0 auto;
+  padding: 2rem 1.5rem;
+}
+.mentor-main { flex: 1; min-width: 0; }
+.cmp-sidebar {
+  width: 400px;
+  flex-shrink: 0;
+  position: sticky;
+  top: 1rem;
+  max-height: calc(100vh - 2rem);
+  overflow-y: auto;
+}
+@media (max-width: 1100px) {
+  .mentor-layout { flex-direction: column; }
+  .cmp-sidebar { width: 100%; position: static; max-height: none; }
+}
+
+
+.cmp-page { max-width: 1200px; margin: 0 auto; padding: 2rem 1.5rem; }
+.cmp-page .cmp-cols {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 2rem;
+  align-items: start;
+}
+.cmp-page .cmp-inputs { order: 1; }
+.cmp-page .cmp-results { order: 2; position: sticky; top: 1rem; }
+@media (max-width: 900px) {
+  .cmp-page .cmp-cols { grid-template-columns: 1fr; }
+  .cmp-page .cmp-results { order: 0; position: static; }
+}

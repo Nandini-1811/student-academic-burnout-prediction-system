@@ -34,10 +34,11 @@ function MentorDashboard() {
   const lowCount = students.filter((s) => s.risk_level === "Low").length;
 
   return (
-    <div className="app-container">
+    <div className="mentor-layout">
+    <div className="mentor-main">
       <div className="app-header">
         <h1>Mentor Dashboard</h1>
-        <p>All students, ranked by current burnout risk</p>
+                <p>All students, ranked by current burnout risk</p>
       </div>
 
       <div style={{ display: "flex", gap: "1rem", marginBottom: "1.5rem" }}>
@@ -109,8 +110,9 @@ function MentorDashboard() {
               ))}
             </tbody>
           </table>
-        )}
+                )}
       </div>
+    </div>
     </div>
   );
 }
